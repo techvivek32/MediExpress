@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
 import { verifyToken } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
@@ -22,22 +20,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'No image provided' }, { status: 400 });
     }
 
-    // Generate unique filename
-    const timestamp = Date.now();
-    const filename = `${decoded.userId}_${timestamp}.jpg`;
-    
-    // Convert file to buffer
+    // Convert file to base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-
-    // Save to public/uploads/profiles
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'profiles');
-    const filepath = join(uploadDir, filename);
-    
-    await writeFile(filepath, buffer);
-
-    // Return the URL path
-    const imageUrl = `/uploads/profiles/${filename}`;
+    const base64 = buffer.toString('base64');
+    const imageUrl = `data:${file.type};base64,${base64}`;
 
     return NextResponse.json({
       success: true,
