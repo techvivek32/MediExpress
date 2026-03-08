@@ -260,19 +260,20 @@ class _AddressSelectionScreenState extends State<AddressSelectionScreen> {
           children: [
             Row(
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _navigateToAddAddress,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add New'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.primary,
+                OutlinedButton.icon(
+                  onPressed: _navigateToAddAddress,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Add New'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing16,
+                      vertical: AppTheme.spacing12,
                     ),
                   ),
                 ),
                 const SizedBox(width: AppTheme.spacing12),
                 Expanded(
-                  flex: 2,
                   child: PrimaryButton(
                     text: 'Confirm Address',
                     onPressed: _selectedAddressId == null ? null : _confirmAddress,

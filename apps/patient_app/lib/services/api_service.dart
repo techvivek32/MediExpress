@@ -131,8 +131,38 @@ class ApiService {
   static ApiResponse _handleResponse(http.Response response) {
     try {
       print('🔍 Parsing response...');
-      final body = json.decode(response.body);
-      print('📦 Parsed body: $body');
+      print('📊 Status Code: ${response.statusCode}');
+      print('📥 Raw Response: ${response.body}');
+      
+      // Check if response is empty
+      if (response.body.isEmpty) {
+        return ApiResponse(
+          success: response.statusCode >= 200 && response.statusCode < 300,
+          message: response.statusCode >= 200 && response.statusCode < 300 
+              ? 'Success' 
+              : 'Server error',
+        );
+      }
+
+      // Try to parse as JSON
+      dynamic body;
+      try {
+        body = json.decode(response.body);
+        print('📦 Parsed body: $body');
+      } catch (jsonError) {
+        print('❌ JSON parsing error: $jsonError');
+        // If it's not JSON, it might be an HTML error page
+        if (response.body.contains('<html>') || response.body.contains('<!DOCTYPE')) {
+          return ApiResponse(
+            success: false,
+            message: 'Server error - received HTML instead of JSON',
+          );
+        }
+        return ApiResponse(
+          success: false,
+          message: 'Invalid response format',
+        );
+      }
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return ApiResponse(
@@ -151,7 +181,7 @@ class ApiService {
       print('❌ Response parsing error: $e');
       return ApiResponse(
         success: false,
-        message: 'Failed to parse response',
+        message: 'Failed to parse response: ${e.toString()}',
       );
     }
   }
