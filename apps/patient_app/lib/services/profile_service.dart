@@ -21,7 +21,7 @@ class ProfileService {
   static Future<ProfileResult> updateProfile({
     required String fullName,
     required String phone,
-    String? profileImage,
+    String? profileImageUrl,
   }) async {
     try {
       final response = await ApiService.put(
@@ -29,7 +29,7 @@ class ProfileService {
         {
           'fullName': fullName,
           'phone': phone,
-          if (profileImage != null) 'profileImage': profileImage,
+          if (profileImageUrl != null) 'profileImageUrl': profileImageUrl,
         },
       );
 
