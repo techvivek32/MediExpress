@@ -23,14 +23,14 @@ export async function GET(request: NextRequest) {
         const totalOrders = 0;
 
         return {
-          id: user._id.toString(),
+          id: (user._id as any).toString(),
           name: user.fullName,
           email: user.email,
           phone: user.phone,
           totalOrders,
           status: user.isVerified ? 'active' : 'inactive',
           joinedDate: new Date(user.createdAt).toISOString().split('T')[0],
-          addresses: patient?.addresses || [],
+          addresses: (patient as any)?.addresses || [],
         };
       })
     );

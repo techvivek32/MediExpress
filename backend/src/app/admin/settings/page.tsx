@@ -34,7 +34,7 @@ export default function SettingsPage() {
   const fetchSettings = async () => {
     try {
       const response = await fetch('/api/settings');
-      const data = await response.json();
+      const data = await response.json() as any;
       if (data.success) {
         setSettings(data.data);
       }
@@ -53,7 +53,7 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       });
-      const data = await response.json();
+      const data = await response.json() as any;
       if (data.success) {
         alert('Settings saved successfully!');
       }

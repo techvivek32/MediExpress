@@ -2,15 +2,21 @@ import admin from 'firebase-admin';
 import User from '@/models/User';
 import Notification from '@/models/Notification';
 
-// Initialize Firebase Admin
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    }),
-  });
+// Initialize Firebase Admin (optional - only if credentials are provided)
+let firebaseInitialized = false;
+if (!admin.apps.length && process.env.FIREBASE_PROJECT_ID) {
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      } as admin.ServiceAccount),
+    });
+    firebaseInitialized = true;
+  } catch (error) {
+    console.warn('Firebase Admin initialization skipped:', error);
+  }
 }
 
 export async function sendNotificationToUser(
@@ -28,6 +34,12 @@ export async function sendNotificationToUser(
       type: data?.type || 'general',
       data,
     });
+
+    // Only send FCM notification if Firebase is initialized
+    if (!firebaseInitialized) {
+      console.log('Firebase not initialized, skipping push notification');
+      return;
+    }
 
     // Get user FCM token
     const user = await User.findById(userId);

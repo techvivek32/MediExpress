@@ -26,7 +26,7 @@ export default function PatientsPage() {
   const fetchPatients = async () => {
     try {
       const response = await fetch('/api/patients');
-      const data = await response.json();
+      const data = await response.json() as any;
       if (data.success) {
         setPatients(data.data.patients);
       }
@@ -124,7 +124,7 @@ export default function PatientsPage() {
                   type="text"
                   placeholder="Search patients..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 w-96"
                 />
                 <button className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
