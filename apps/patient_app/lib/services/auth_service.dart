@@ -54,10 +54,15 @@ class AuthService {
     }
   }
 
+  static Future<void> saveUser(User user) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(AppConstants.userKey, json.encode(user.toJson()));
+  }
+
   static Future<void> _saveAuthData(String token, User user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConstants.tokenKey, token);
-    await prefs.setString(AppConstants.userKey, json.encode(user.toJson()));
+    await saveUser(user);
   }
 
   static Future<User?> getCurrentUser() async {

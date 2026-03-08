@@ -36,7 +36,7 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final result = await AuthService.login(email, password);
-      
+
       if (result.success) {
         _user = result.user;
         _isLoading = false;
@@ -63,7 +63,7 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final result = await AuthService.register(data);
-      
+
       if (result.success) {
         _user = result.user;
         _isLoading = false;
@@ -96,9 +96,16 @@ class AuthProvider with ChangeNotifier {
   }
 
   void updateUser(Map<String, dynamic> userData) {
-    if (_user != null) {
-      _user = User.fromJson(userData);
-      notifyListeners();
+    // Handle the case where the API returns _id instead of id
+    final data = Map<String, dynamic>.from(userData);
+    if (data.containsKey('_id') && !data.containsKey('id')) {
+      data['id'] = data['_id'].toString();
     }
+    _user = User.fromJson(data);
+
+    // Also update persistent storage
+    AuthService.saveUser(_user!);
+
+    notifyListeners();
   }
 }

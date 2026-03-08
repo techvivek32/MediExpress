@@ -22,10 +22,13 @@ class AppTheme {
   static const double spacing20 = 20.0;
   static const double spacing24 = 24.0;
   static const double spacing32 = 32.0;
+  static const double spacing48 = 48.0;
 
   static const double radiusSmall = 8.0;
   static const double radiusMedium = 12.0;
   static const double radiusLarge = 16.0;
+
+  static const Color textHint = Color(0xFFBDBDBD);
 
   static ThemeData get lightTheme {
     return ThemeData(
@@ -34,7 +37,6 @@ class AppTheme {
         primary: primary,
         secondary: secondary,
         surface: surface,
-        background: background,
         error: error,
       ),
       scaffoldBackgroundColor: background,

@@ -1,33 +1,66 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
+
+const API_BASE_URL = 'https://medi-express-zvo4.vercel.app/api';
 
 export default function PharmaciesPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [pharmacies, setPharmacies] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    avgRating: 0,
+    pending: 0
+  });
 
-  const pharmacies = [
-    {
-      id: '1',
-      name: 'City Pharmacy',
-      licenseNumber: 'PH-12345',
-      address: '123 Main St, Casablanca',
-      phone: '+212 600 000 001',
-      totalOrders: 156,
-      rating: 4.8,
-      status: 'active',
-    },
-    {
-      id: '2',
-      name: 'Health Plus',
-      licenseNumber: 'PH-12346',
-      address: '456 Health Ave, Rabat',
-      phone: '+212 600 000 002',
-      totalOrders: 98,
-      rating: 4.6,
-      status: 'active',
-    },
-  ];
+  useEffect(() => {
+    fetchPharmacies();
+  }, [search]);
+
+  const fetchPharmacies = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/admin/pharmacies?search=${search}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setPharmacies(data.data.pharmacies);
+        setStats({
+          total: data.data.pharmacies.length,
+          active: data.data.pharmacies.filter((p: any) => p.isActive).length,
+          avgRating: data.data.pharmacies.length > 0 
+            ? data.data.pharmacies.reduce((acc: number, p: any) => acc + (p.rating || 0), 0) / data.data.pharmacies.length 
+            : 0,
+          pending: data.data.pharmacies.filter((p: any) => !p.isVerified).length
+        });
+      } else {
+        setError(data.message);
+      }
+    } catch (err) {
+      setError('Failed to fetch pharmacies');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleStatus = async (id: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/patients/${id}/toggle-status`, {
+        method: 'POST'
+      });
+      const data = await response.json();
+      if (data.success) {
+        fetchPharmacies();
+      }
+    } catch (err) {
+      console.error('Failed to toggle status');
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -56,7 +89,7 @@ export default function PharmaciesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Total Pharmacies</p>
-                  <h3 className="text-2xl font-bold text-gray-800">156</h3>
+                  <h3 className="text-2xl font-bold text-gray-800">{stats.total}</h3>
                 </div>
                 <div className="bg-purple-500 w-12 h-12 rounded-full flex items-center justify-center">
                   <span className="text-2xl">🏥</span>
@@ -68,7 +101,7 @@ export default function PharmaciesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Active Now</p>
-                  <h3 className="text-2xl font-bold text-gray-800">89</h3>
+                  <h3 className="text-2xl font-bold text-gray-800">{stats.active}</h3>
                 </div>
                 <div className="bg-green-500 w-12 h-12 rounded-full flex items-center justify-center">
                   <span className="text-2xl">✅</span>
@@ -80,7 +113,7 @@ export default function PharmaciesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Avg Rating</p>
-                  <h3 className="text-2xl font-bold text-gray-800">4.7</h3>
+                  <h3 className="text-2xl font-bold text-gray-800">{stats.avgRating.toFixed(1)}</h3>
                 </div>
                 <div className="bg-yellow-500 w-12 h-12 rounded-full flex items-center justify-center">
                   <span className="text-2xl">⭐</span>
@@ -92,7 +125,7 @@ export default function PharmaciesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Pending Approval</p>
-                  <h3 className="text-2xl font-bold text-gray-800">12</h3>
+                  <h3 className="text-2xl font-bold text-gray-800">{stats.pending}</h3>
                 </div>
                 <div className="bg-orange-500 w-12 h-12 rounded-full flex items-center justify-center">
                   <span className="text-2xl">⏳</span>
@@ -107,11 +140,10 @@ export default function PharmaciesPage() {
                 <input
                   type="text"
                   placeholder="Search pharmacies..."
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 w-96"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 w-96 text-gray-800"
                 />
-                <button className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
-                  Add Pharmacy
-                </button>
               </div>
             </div>
 
@@ -119,50 +151,56 @@ export default function PharmaciesPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Pharmacy</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Pharmacy Name</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">License</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Address</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Phone</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Orders</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Rating</th>
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Total Orders</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Status</th>
                     <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {pharmacies.map((pharmacy) => (
+                  {loading ? (
+                    <tr><td colSpan={6} className="text-center py-10 text-gray-500">Loading pharmacies...</td></tr>
+                  ) : error ? (
+                    <tr><td colSpan={6} className="text-center py-10 text-red-500">{error}</td></tr>
+                  ) : pharmacies.length === 0 ? (
+                    <tr><td colSpan={6} className="text-center py-10 text-gray-500">No pharmacies found.</td></tr>
+                  ) : pharmacies.map((pharmacy) => (
                     <tr key={pharmacy.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="py-4 px-6">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-semibold mr-3">
-                            {pharmacy.name.charAt(0)}
-                          </div>
+                        <div className="flex flex-col">
                           <span className="font-medium text-gray-800">{pharmacy.name}</span>
+                          <span className="text-xs text-gray-500">{pharmacy.address}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6 text-gray-600">{pharmacy.licenseNumber}</td>
-                      <td className="py-4 px-6 text-gray-600">{pharmacy.address}</td>
-                      <td className="py-4 px-6 text-gray-600">{pharmacy.phone}</td>
-                      <td className="py-4 px-6">
-                        <span className="font-medium text-gray-800">{pharmacy.totalOrders}</span>
-                      </td>
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-6 text-gray-600">
                         <div className="flex items-center">
                           <span className="text-yellow-500 mr-1">⭐</span>
-                          <span className="font-medium text-gray-800">{pharmacy.rating}</span>
+                          {pharmacy.rating.toFixed(1)}
                         </div>
                       </td>
+                      <td className="py-4 px-6 text-gray-800 font-medium">{pharmacy.totalOrders}</td>
                       <td className="py-4 px-6">
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Active
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            pharmacy.isActive
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {pharmacy.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="py-4 px-6">
-                        <button className="text-primary-600 hover:text-primary-700 text-sm font-medium mr-3">
-                          View
-                        </button>
-                        <button className="text-red-600 hover:text-red-700 text-sm font-medium">
-                          Suspend
+                        <button 
+                          onClick={() => toggleStatus(pharmacy.id)}
+                          className={`text-sm font-medium ${
+                            pharmacy.isActive ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'
+                          }`}
+                        >
+                          {pharmacy.isActive ? 'Deactivate' : 'Activate'}
                         </button>
                       </td>
                     </tr>
