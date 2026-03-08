@@ -1,9 +1,9 @@
 class AppConstants {
   // API Configuration
-  // Using PC's local IP address for WiFi connection
-  static const String baseUrl = 'http://192.168.1.33:3000/api';
-  static const String androidEmulatorUrl = 'http://10.0.2.2:3000/api';
-  static const String iosSimulatorUrl = 'http://localhost:3000/api';
+  // Live Vercel backend URL
+  static const String baseUrl = 'https://medi-express-zvo4.vercel.app/api';
+  static const String androidEmulatorUrl = 'https://medi-express-zvo4.vercel.app/api';
+  static const String iosSimulatorUrl = 'https://medi-express-zvo4.vercel.app/api';
   
   // Timeouts
   static const Duration connectionTimeout = Duration(seconds: 30);
