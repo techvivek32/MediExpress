@@ -94,4 +94,11 @@ class AuthProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  void updateUser(Map<String, dynamic> userData) {
+    if (_user != null) {
+      _user = User.fromJson(userData);
+      notifyListeners();
+    }
+  }
 }

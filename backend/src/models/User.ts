@@ -8,6 +8,7 @@ export interface IUser extends Document {
   role: 'patient' | 'pharmacy' | 'rider' | 'admin';
   isVerified: boolean;
   isActive: boolean;
+  profileImage?: string;
   fcmToken?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -51,6 +52,9 @@ const UserSchema = new Schema<IUser>(
       default: true,
     },
     fcmToken: {
+      type: String,
+    },
+    profileImage: {
       type: String,
     },
   },
