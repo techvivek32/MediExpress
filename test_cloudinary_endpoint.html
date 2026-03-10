@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Cloudinary Endpoint</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>MediExpress Cloudinary Endpoint Test</h1>
+    
+    <div class="info">
+        <strong>Backend URL:</strong> https://medi-express-zvo4.vercel.app/api
+    </div>
+    
+    <button onclick="testHealthEndpoint()">Test Health Endpoint</button>
+    <button onclick="testCloudinaryEndpoint()">Test Cloudinary Endpoint</button>
+    
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        async function testHealthEndpoint() {
+            addResult('Testing health endpoint...', 'info');
+            try {
+                const response = await fetch('https://medi-express-zvo4.vercel.app/api/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ Health endpoint working: ${data.message}`, 'success');
+                } else {
+                    addResult(`❌ Health endpoint failed: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Health endpoint error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCloudinaryEndpoint() {
+            addResult('Testing Cloudinary upload endpoint...', 'info');
+            try {
+                // Test without auth (should get 401 Unauthorized if endpoint exists)
+                const response = await fetch('https://medi-express-zvo4.vercel.app/api/upload/profile-image', {
+                    method: 'POST'
+                });
+                
+                if (response.status === 401) {
+                    addResult('✅ Cloudinary endpoint exists (401 Unauthorized as expected)', 'success');
+                    addResult('Backend has Cloudinary support deployed!', 'success');
+                } else if (response.status === 404) {
+                    addResult('❌ Cloudinary endpoint not found (404)', 'error');
+                    addResult('Backend needs to be deployed with Cloudinary support', 'error');
+                } else {
+                    addResult(`⚠️ Unexpected response: ${response.status}`, 'info');
+                }
+            } catch (error) {
+                addResult(`❌ Cloudinary endpoint error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run tests on page load
+        window.onload = function() {
+            testHealthEndpoint();
+            setTimeout(testCloudinaryEndpoint, 1000);
+        };
+    </script>
+</body>
+</html>
