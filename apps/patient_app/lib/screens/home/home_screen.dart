@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../prescription/upload_prescription_screen.dart';
+import '../../features/prescription/screens/upload_prescription_screen.dart';
 import '../orders/order_history_screen.dart';
 import '../profile/profile_screen.dart';
 

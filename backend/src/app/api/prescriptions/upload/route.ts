@@ -17,10 +17,10 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { imageUrl, address, coordinates } = body;
+    const { imageUrl, imagePublicId, address, coordinates } = body;
 
-    if (!imageUrl || !address || !coordinates) {
-      return errorResponse('Image, address and coordinates are required');
+    if (!imageUrl) {
+      return errorResponse('Image URL is required');
     }
 
     // Get patient
@@ -29,57 +29,67 @@ export async function POST(request: NextRequest) {
       return errorResponse('Patient profile not found', 404);
     }
 
-    // Find nearby pharmacies within 5km
-    const nearbyPharmacies = await Pharmacy.find({
-      location: {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: coordinates, // [longitude, latitude]
-          },
-          $maxDistance: 5000, // 5km in meters
-        },
-      },
-      isOpen: true,
-    }).limit(20);
-
-    if (nearbyPharmacies.length === 0) {
-      return errorResponse('No pharmacies found nearby', 404);
-    }
-
-    // Create prescription
-    const prescription = await Prescription.create({
+    // Create prescription data
+    const prescriptionData: any = {
       patientId: patient._id,
       imageUrl,
-      deliveryAddress: {
+      status: 'pending',
+    };
+
+    if (imagePublicId) {
+      prescriptionData.imagePublicId = imagePublicId;
+    }
+
+    // Add delivery address if provided
+    if (address && coordinates) {
+      prescriptionData.deliveryAddress = {
         address,
         location: {
           type: 'Point',
           coordinates,
         },
-      },
-      nearbyPharmacies: nearbyPharmacies.map((p) => p._id),
-      status: 'pending',
-    });
+      };
 
-    // Send notifications to nearby pharmacies
-    await sendNotificationToPharmacies(
-      nearbyPharmacies.map((p) => p.userId.toString()),
-      'New Prescription Request',
-      'A patient nearby needs medicine delivery',
-      {
-        prescriptionId: prescription._id.toString(),
-        type: 'prescription_request',
+      // Find nearby pharmacies within 5km
+      const nearbyPharmacies = await Pharmacy.find({
+        location: {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: coordinates, // [longitude, latitude]
+            },
+            $maxDistance: 5000, // 5km in meters
+          },
+        },
+        isOpen: true,
+      }).limit(20);
+
+      if (nearbyPharmacies.length > 0) {
+        prescriptionData.nearbyPharmacies = nearbyPharmacies.map((p) => p._id);
+
+        // Send notifications to nearby pharmacies
+        await sendNotificationToPharmacies(
+          nearbyPharmacies.map((p) => p.userId.toString()),
+          'New Prescription Request',
+          'A patient nearby needs medicine delivery',
+          {
+            prescriptionId: prescriptionData._id?.toString(),
+            type: 'prescription_request',
+          }
+        );
       }
-    );
+    }
+
+    // Create prescription
+    const prescription = await Prescription.create(prescriptionData);
 
     return successResponse(
       {
         prescription: {
-          id: prescription._id,
+          _id: prescription._id,
           imageUrl: prescription.imageUrl,
           status: prescription.status,
-          nearbyPharmaciesCount: nearbyPharmacies.length,
+          nearbyPharmaciesCount: prescriptionData.nearbyPharmacies?.length || 0,
         },
       },
       'Prescription uploaded successfully',

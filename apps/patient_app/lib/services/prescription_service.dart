@@ -2,26 +2,34 @@ import '../models/prescription_model.dart';
 import 'api_service.dart';
 
 class PrescriptionService {
-  static Future<PrescriptionResult> uploadPrescription({
+  static Future<PrescriptionUploadResult> uploadPrescription({
     required String imageUrl,
-    required String address,
-    required List<double> coordinates,
+    required String imagePublicId,
+    String? address,
+    List<double>? coordinates,
   }) async {
     try {
-      final response = await ApiService.post('/prescriptions/upload', {
+      final Map<String, dynamic> data = {
         'imageUrl': imageUrl,
-        'address': address,
-        'coordinates': coordinates,
-      });
+        'imagePublicId': imagePublicId,
+      };
+
+      if (address != null) data['address'] = address;
+      if (coordinates != null) data['coordinates'] = coordinates;
+
+      final response = await ApiService.post('/prescriptions/upload', data);
 
       if (response.success) {
-        final prescription = Prescription.fromJson(response.data['prescription']);
-        return PrescriptionResult(success: true, prescription: prescription);
+        return PrescriptionUploadResult(
+          success: true,
+          prescriptionId: response.data['prescription']['_id'],
+          message: response.message,
+        );
       } else {
-        return PrescriptionResult(success: false, message: response.message);
+        return PrescriptionUploadResult(success: false, message: response.message);
       }
     } catch (e) {
-      return PrescriptionResult(
+      return PrescriptionUploadResult(
         success: false,
         message: 'Failed to upload prescription',
       );
@@ -59,6 +67,18 @@ class PrescriptionService {
     }
     return [];
   }
+}
+
+class PrescriptionUploadResult {
+  final bool success;
+  final String? message;
+  final String? prescriptionId;
+
+  PrescriptionUploadResult({
+    required this.success,
+    this.message,
+    this.prescriptionId,
+  });
 }
 
 class PrescriptionResult {

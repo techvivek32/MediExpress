@@ -3,8 +3,9 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IPrescription extends Document {
   patientId: mongoose.Types.ObjectId;
   imageUrl: string;
+  imagePublicId?: string;
   status: 'pending' | 'quoted' | 'accepted' | 'rejected' | 'expired';
-  deliveryAddress: {
+  deliveryAddress?: {
     address: string;
     location: {
       type: string;
@@ -28,16 +29,19 @@ const PrescriptionSchema = new Schema<IPrescription>(
       type: String,
       required: true,
     },
+    imagePublicId: {
+      type: String,
+    },
     status: {
       type: String,
       enum: ['pending', 'quoted', 'accepted', 'rejected', 'expired'],
       default: 'pending',
     },
     deliveryAddress: {
-      address: { type: String, required: true },
+      address: { type: String },
       location: {
         type: { type: String, enum: ['Point'], default: 'Point' },
-        coordinates: { type: [Number], required: true },
+        coordinates: { type: [Number] },
       },
     },
     nearbyPharmacies: [

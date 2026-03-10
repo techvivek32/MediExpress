@@ -15,8 +15,9 @@ class PrescriptionProvider with ChangeNotifier {
 
   Future<bool> uploadPrescription({
     required String imageUrl,
-    required String address,
-    required List<double> coordinates,
+    required String imagePublicId,
+    String? address,
+    List<double>? coordinates,
   }) async {
     _isLoading = true;
     _error = null;
@@ -25,13 +26,16 @@ class PrescriptionProvider with ChangeNotifier {
     try {
       final result = await PrescriptionService.uploadPrescription(
         imageUrl: imageUrl,
+        imagePublicId: imagePublicId,
         address: address,
         coordinates: coordinates,
       );
 
       if (result.success) {
-        _currentPrescription = result.prescription;
-        _prescriptions.insert(0, result.prescription!);
+        // Load the prescription details if we have an ID
+        if (result.prescriptionId != null) {
+          await getPrescriptionDetails(result.prescriptionId!);
+        }
         _isLoading = false;
         notifyListeners();
         return true;

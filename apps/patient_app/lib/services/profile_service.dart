@@ -22,16 +22,23 @@ class ProfileService {
     required String fullName,
     required String phone,
     String? profileImageUrl,
+    String? profileImagePublicId,
   }) async {
     try {
-      final response = await ApiService.put(
-        '/patients/profile',
-        {
-          'fullName': fullName,
-          'phone': phone,
-          if (profileImageUrl != null) 'profileImageUrl': profileImageUrl,
-        },
-      );
+      final Map<String, dynamic> data = {
+        'fullName': fullName,
+        'phone': phone,
+      };
+
+      if (profileImageUrl != null) {
+        data['profileImageUrl'] = profileImageUrl;
+      }
+      
+      if (profileImagePublicId != null) {
+        data['profileImagePublicId'] = profileImagePublicId;
+      }
+
+      final response = await ApiService.put('/patients/profile', data);
 
       if (response.success) {
         return ProfileResult(

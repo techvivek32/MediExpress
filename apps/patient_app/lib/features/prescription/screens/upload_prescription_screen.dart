@@ -4,6 +4,8 @@ import 'dart:io';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../services/media_service.dart';
+import '../../../services/prescription_service.dart';
 
 class UploadPrescriptionScreen extends StatefulWidget {
   const UploadPrescriptionScreen({super.key});
@@ -116,16 +118,49 @@ class _UploadPrescriptionScreenState extends State<UploadPrescriptionScreen> {
 
     setState(() => _isUploading = true);
 
-    // TODO: Upload image to Cloudinary and get URL
-    // TODO: Get current location
-    // TODO: Call prescription service
+    try {
+      // Upload image to Cloudinary
+      final uploadResult = await MediaService.uploadImage(_imageFile!);
+      
+      if (!uploadResult.success) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(uploadResult.message ?? 'Failed to upload image')),
+          );
+        }
+        setState(() => _isUploading = false);
+        return;
+      }
 
-    await Future.delayed(const Duration(seconds: 2));
+      // Upload prescription with Cloudinary URL
+      final prescriptionResult = await PrescriptionService.uploadPrescription(
+        imageUrl: uploadResult.url!,
+        imagePublicId: uploadResult.publicId!,
+      );
 
-    setState(() => _isUploading = false);
+      setState(() => _isUploading = false);
 
-    if (mounted) {
-      Navigator.pushNamed(context, '/address-selection');
+      if (!mounted) return;
+
+      if (prescriptionResult.success) {
+        // Navigate to address selection with prescription ID
+        Navigator.pushNamed(
+          context, 
+          '/address-selection',
+          arguments: prescriptionResult.prescriptionId,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(prescriptionResult.message ?? 'Failed to upload prescription')),
+        );
+      }
+    } catch (e) {
+      setState(() => _isUploading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to upload prescription')),
+        );
+      }
     }
   }
 

@@ -9,6 +9,7 @@ export interface IUser extends Document {
   isVerified: boolean;
   isActive: boolean;
   profileImage?: string;
+  profileImagePublicId?: string;
   fcmToken?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -55,6 +56,9 @@ const UserSchema = new Schema<IUser>(
       type: String,
     },
     profileImage: {
+      type: String,
+    },
+    profileImagePublicId: {
       type: String,
     },
   },
