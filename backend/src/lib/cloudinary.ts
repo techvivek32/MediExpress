@@ -1,11 +1,16 @@
 import { v2 as cloudinary } from 'cloudinary';
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: 'dw0abqcmm',
-  api_key: '842336136597824',
-  api_secret: 'R99Nx1A5Bwg2j5O5BkOAWZrBTo0',
-});
+// Configure Cloudinary with fallback error handling
+try {
+  cloudinary.config({
+    cloud_name: 'dw0abqcmm',
+    api_key: '842336136597824',
+    api_secret: 'R99Nx1A5Bwg2j5O5BkOAWZrBTo0',
+  });
+  console.log('✅ Cloudinary configured successfully');
+} catch (error) {
+  console.error('❌ Cloudinary configuration error:', error);
+}
 
 export interface CloudinaryUploadResult {
   public_id: string;
@@ -26,32 +31,44 @@ export const uploadToCloudinary = async (
   } = {}
 ): Promise<CloudinaryUploadResult> => {
   return new Promise((resolve, reject) => {
-    const uploadOptions = {
-      folder: options.folder || 'mediexpress',
-      resource_type: options.resource_type || 'auto',
-      ...options.transformation,
-    };
+    try {
+      const uploadOptions = {
+        folder: options.folder || 'mediexpress',
+        resource_type: options.resource_type || 'auto',
+        ...options.transformation,
+      };
 
-    cloudinary.uploader.upload_stream(
-      uploadOptions,
-      (error, result) => {
-        if (error) {
-          reject(error);
-        } else if (result) {
-          resolve(result as CloudinaryUploadResult);
-        } else {
-          reject(new Error('Upload failed'));
+      console.log('🔄 Starting Cloudinary upload with options:', uploadOptions);
+
+      cloudinary.uploader.upload_stream(
+        uploadOptions,
+        (error, result) => {
+          if (error) {
+            console.error('❌ Cloudinary upload error:', error);
+            reject(error);
+          } else if (result) {
+            console.log('✅ Cloudinary upload successful:', result.secure_url);
+            resolve(result as CloudinaryUploadResult);
+          } else {
+            console.error('❌ Cloudinary upload failed: No result');
+            reject(new Error('Upload failed: No result returned'));
+          }
         }
-      }
-    ).end(buffer);
+      ).end(buffer);
+    } catch (error) {
+      console.error('❌ Cloudinary upload stream error:', error);
+      reject(error);
+    }
   });
 };
 
 export const deleteFromCloudinary = async (publicId: string): Promise<void> => {
   try {
+    console.log('🗑️ Deleting from Cloudinary:', publicId);
     await cloudinary.uploader.destroy(publicId);
+    console.log('✅ Deleted from Cloudinary successfully');
   } catch (error) {
-    console.error('Error deleting from Cloudinary:', error);
+    console.error('❌ Error deleting from Cloudinary:', error);
     throw error;
   }
 };
