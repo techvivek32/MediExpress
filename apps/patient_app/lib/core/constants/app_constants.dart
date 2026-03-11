@@ -1,9 +1,9 @@
 class AppConstants {
   // API Configuration
   // Live Vercel backend URL
-  static const String baseUrl = 'https://medi-express-zvo4.vercel.app/api';
-  static const String androidEmulatorUrl = 'https://medi-express-zvo4.vercel.app/api';
-  static const String iosSimulatorUrl = 'https://medi-express-zvo4.vercel.app/api';
+  static const String baseUrl = 'https://medi-express-vivekvora3226-2527s-projects.vercel.app/api';
+  static const String androidEmulatorUrl = 'https://medi-express-vivekvora3226-2527s-projects.vercel.app/api';
+  static const String iosSimulatorUrl = 'https://medi-express-vivekvora3226-2527s-projects.vercel.app/api';
   
   // Timeouts
   static const Duration connectionTimeout = Duration(seconds: 30);
