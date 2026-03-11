@@ -34,15 +34,23 @@ export async function POST(request: NextRequest) {
       size: file.size
     });
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      console.log('❌ Invalid file type:', file.type);
+    // Validate file type - be more lenient with MIME types
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/pjpeg'];
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+    
+    // Check both MIME type and file extension
+    const isValidType = allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension || '');
+    
+    if (!isValidType) {
+      console.log('❌ Invalid file type:', file.type, 'Extension:', fileExtension);
       return NextResponse.json({ 
         success: false, 
-        message: 'Invalid file type. Only JPEG, PNG, and WebP are allowed.' 
+        message: `Invalid file type. Only JPEG, PNG, and WebP images are allowed. Received: ${file.type}` 
       }, { status: 400 });
     }
+    
+    console.log('✅ File type validated:', file.type, 'Extension:', fileExtension);
 
     // Validate file size (5MB limit)
     const maxSize = 5 * 1024 * 1024; // 5MB

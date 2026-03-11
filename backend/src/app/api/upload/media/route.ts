@@ -24,23 +24,29 @@ export async function POST(request: NextRequest) {
 
     // Validate file type and size based on type
     let allowedTypes: string[];
+    let allowedExtensions: string[];
     let maxSize: number;
     let folder: string;
 
     if (type === 'video') {
-      allowedTypes = ['video/mp4', 'video/mov', 'video/avi', 'video/webm'];
+      allowedTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm', 'video/avi'];
+      allowedExtensions = ['mp4', 'mov', 'avi', 'webm'];
       maxSize = 50 * 1024 * 1024; // 50MB for videos
       folder = 'mediexpress/videos';
     } else {
-      allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/pjpeg'];
+      allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
       maxSize = 10 * 1024 * 1024; // 10MB for images
       folder = 'mediexpress/images';
     }
 
-    if (!allowedTypes.includes(file.type)) {
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+    const isValidType = allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension || '');
+
+    if (!isValidType) {
       return NextResponse.json({ 
         success: false, 
-        message: `Invalid file type. Allowed types: ${allowedTypes.join(', ')}` 
+        message: `Invalid file type. Allowed types: ${allowedExtensions.join(', ')}. Received: ${file.type}` 
       }, { status: 400 });
     }
 

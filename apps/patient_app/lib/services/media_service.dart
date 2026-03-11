@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_constants.dart';
 
@@ -25,6 +26,32 @@ class MediaService {
         );
       }
 
+      // Determine MIME type from file extension
+      String mimeType;
+      final extension = file.path.toLowerCase().split('.').last;
+      
+      if (type == 'video') {
+        if (extension == 'mp4') {
+          mimeType = 'video/mp4';
+        } else if (extension == 'mov') {
+          mimeType = 'video/quicktime';
+        } else if (extension == 'avi') {
+          mimeType = 'video/x-msvideo';
+        } else if (extension == 'webm') {
+          mimeType = 'video/webm';
+        } else {
+          mimeType = 'video/mp4'; // default
+        }
+      } else {
+        if (extension == 'png') {
+          mimeType = 'image/png';
+        } else if (extension == 'webp') {
+          mimeType = 'image/webp';
+        } else {
+          mimeType = 'image/jpeg'; // default for jpg/jpeg
+        }
+      }
+
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('${AppConstants.baseUrl}/upload/media'),
@@ -32,11 +59,19 @@ class MediaService {
 
       request.headers['Authorization'] = 'Bearer $token';
       request.fields['type'] = type;
-      request.files.add(await http.MultipartFile.fromPath('file', file.path));
+      request.files.add(await http.MultipartFile.fromPath(
+        'file',
+        file.path,
+        contentType: MediaType(
+          type == 'video' ? 'video' : 'image',
+          extension == 'png' ? 'png' : extension == 'webp' ? 'webp' : extension == 'mp4' ? 'mp4' : extension == 'mov' ? 'quicktime' : extension == 'avi' ? 'x-msvideo' : extension == 'webm' ? 'webm' : 'jpeg',
+        ),
+      ));
 
       print('🌐 API Media Upload: ${request.url}');
       print('📤 Request Type: $type');
       print('📤 Request File: ${file.path}');
+      print('📎 MIME Type: $mimeType');
 
       var response = await request.send();
       var responseData = await response.stream.bytesToString();
