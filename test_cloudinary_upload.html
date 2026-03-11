@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cloudinary Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            color: #166534;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            color: #1e40af;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .preview {
+            margin-top: 10px;
+            max-width: 200px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤️ Test Cloudinary Profile Image Upload</h1>
+        
+        <div class="info">
+            <strong>Instructions:</strong>
+            <ol>
+                <li>Get your JWT token from the app (login first)</li>
+                <li>Paste the token below</li>
+                <li>Select an image file (JPG, PNG, JPEG)</li>
+                <li>Click "Upload Image"</li>
+                <li>Check the result below</li>
+            </ol>
+        </div>
+
+        <div class="form-group">
+            <label for="apiUrl">API URL:</label>
+            <input type="text" id="apiUrl" value="https://medi-express.vercel.app/api/upload/profile-image" />
+        </div>
+
+        <div class="form-group">
+            <label for="token">JWT Token:</label>
+            <input type="text" id="token" placeholder="Paste your JWT token here" />
+        </div>
+
+        <div class="form-group">
+            <label for="imageFile">Select Image:</label>
+            <input type="file" id="imageFile" accept="image/jpeg,image/jpg,image/png,image/webp" />
+            <img id="preview" class="preview" style="display:none;" />
+        </div>
+
+        <button id="uploadBtn" onclick="uploadImage()">Upload Image</button>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        // Preview selected image
+        document.getElementById('imageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('preview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function uploadImage() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const token = document.getElementById('token').value.trim();
+            const fileInput = document.getElementById('imageFile');
+            const resultDiv = document.getElementById('result');
+            const uploadBtn = document.getElementById('uploadBtn');
+
+            // Validation
+            if (!token) {
+                showResult('error', 'Please enter your JWT token');
+                return;
+            }
+
+            if (!fileInput.files || !fileInput.files[0]) {
+                showResult('error', 'Please select an image file');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            
+            // Validate file type
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                showResult('error', `Invalid file type: ${file.type}. Only JPEG, PNG, and WebP are allowed.`);
+                return;
+            }
+
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showResult('error', `File too large: ${(file.size / 1024 / 1024).toFixed(2)}MB. Maximum is 5MB.`);
+                return;
+            }
+
+            // Disable button
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+            showResult('info', `Uploading ${file.name} (${(file.size / 1024).toFixed(2)} KB)...`);
+
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                console.log('🔄 Starting upload...');
+                console.log('📁 File:', file.name, file.type, file.size);
+                console.log('🔑 Token:', token.substring(0, 20) + '...');
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                console.log('📊 Response Status:', response.status);
+                console.log('📥 Response Data:', data);
+
+                if (response.ok && data.success) {
+                    showResult('success', `
+                        <strong>✅ Upload Successful!</strong><br><br>
+                        <strong>Image URL:</strong><br>
+                        <a href="${data.data.imageUrl}" target="_blank">${data.data.imageUrl}</a><br><br>
+                        <strong>Public ID:</strong> ${data.data.publicId}<br><br>
+                        <img src="${data.data.imageUrl}" style="max-width: 300px; border-radius: 10px; margin-top: 10px;" /><br><br>
+                        <strong>Response:</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `);
+                } else {
+                    showResult('error', `
+                        <strong>❌ Upload Failed</strong><br><br>
+                        <strong>Status:</strong> ${response.status}<br>
+                        <strong>Message:</strong> ${data.message || 'Unknown error'}<br><br>
+                        <strong>Full Response:</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `);
+                }
+            } catch (error) {
+                console.error('❌ Upload error:', error);
+                showResult('error', `
+                    <strong>❌ Network Error</strong><br><br>
+                    ${error.message}<br><br>
+                    <strong>Possible causes:</strong>
+                    <ul>
+                        <li>Server is down or unreachable</li>
+                        <li>CORS issues</li>
+                        <li>Network connectivity problems</li>
+                        <li>Invalid API URL</li>
+                    </ul>
+                `);
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload Image';
+            }
+        }
+
+        function showResult(type, message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
