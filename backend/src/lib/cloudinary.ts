@@ -1,13 +1,17 @@
 import { v2 as cloudinary } from 'cloudinary';
 
-// Configure Cloudinary with fallback error handling
+// Configure Cloudinary with environment variables
+const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'dw0abqcmm';
+const apiKey = process.env.CLOUDINARY_API_KEY || '842336136597824';
+const apiSecret = process.env.CLOUDINARY_API_SECRET || 'R99Nx1A5Bwg2j5O5BkOAWZrBTo0';
+
 try {
   cloudinary.config({
-    cloud_name: 'dw0abqcmm',
-    api_key: '842336136597824',
-    api_secret: 'R99Nx1A5Bwg2j5O5BkOAWZrBTo0',
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
   });
-  console.log('✅ Cloudinary configured successfully');
+  console.log('✅ Cloudinary configured successfully:', { cloudName, apiKey: apiKey.substring(0, 6) + '...' });
 } catch (error) {
   console.error('❌ Cloudinary configuration error:', error);
 }
