@@ -10,6 +10,7 @@ class InputField extends StatefulWidget {
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
   final int maxLines;
+  final int? maxLength;
 
   const InputField({
     super.key,
@@ -22,6 +23,7 @@ class InputField extends StatefulWidget {
     this.validator,
     this.onChanged,
     this.maxLines = 1,
+    this.maxLength,
   });
 
   @override
@@ -40,6 +42,7 @@ class _InputFieldState extends State<InputField> {
       validator: widget.validator,
       onChanged: widget.onChanged,
       maxLines: widget.isPassword ? 1 : widget.maxLines,
+      maxLength: widget.maxLength,
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,

@@ -13,6 +13,11 @@ class AuthProvider with ChangeNotifier {
   String? get error => _error;
   bool get isAuthenticated => _user != null;
 
+  void setUser(User user) {
+    _user = user;
+    notifyListeners();
+  }
+
   Future<void> checkAuth() async {
     _isLoading = true;
     notifyListeners();

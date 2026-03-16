@@ -4,6 +4,8 @@ import '../../../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/input_field.dart';
+import '../../../services/api_service.dart';
+import 'otp_verification_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -34,30 +36,62 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  bool _isSendingOtp = false;
+
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await context.read<AuthProvider>().register(
-      fullName: _nameController.text.trim(),
-      email: _emailController.text.trim(),
-      phone: _phoneController.text.trim(),
-      password: _passwordController.text,
-      pharmacyName: _pharmacyNameController.text.trim(),
-      licenseNumber: _licenseController.text.trim(),
-      address: _addressController.text.trim(),
-    );
+    setState(() => _isSendingOtp = true);
 
-    if (!mounted) return;
-
-    if (success) {
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.read<AuthProvider>().error ?? 'Registration failed'),
-          backgroundColor: AppTheme.error,
-        ),
+    try {
+      final response = await ApiService.post(
+        '/auth/send-otp',
+        {'email': _emailController.text.trim()},
+        includeAuth: false,
       );
+
+      setState(() => _isSendingOtp = false);
+
+      if (!mounted) return;
+
+      if (response.success) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => OTPVerificationScreen(
+              email: _emailController.text.trim(),
+              registrationData: {
+                'fullName': _nameController.text.trim(),
+                'email': _emailController.text.trim(),
+                'phone': _phoneController.text.trim(),
+                'password': _passwordController.text,
+                'role': 'pharmacy',
+                'pharmacyName': _pharmacyNameController.text.trim(),
+                'licenseNumber': _licenseController.text.trim(),
+                'address': _addressController.text.trim(),
+                'coordinates': [0.0, 0.0],
+              },
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.message),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isSendingOtp = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to send OTP'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
     }
   }
 
@@ -144,9 +178,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               Consumer<AuthProvider>(
                 builder: (context, auth, _) => PrimaryButton(
-                  text: 'Register',
-                  onPressed: auth.isLoading ? null : _register,
-                  isLoading: auth.isLoading,
+                  text: 'Send OTP & Continue',
+                  onPressed: _isSendingOtp ? null : _register,
+                  isLoading: _isSendingOtp,
                 ),
               ),
               const SizedBox(height: AppTheme.spacing16),
