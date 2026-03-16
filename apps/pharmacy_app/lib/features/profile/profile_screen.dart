@@ -178,15 +178,15 @@ class ProfileScreen extends StatelessWidget {
               text: 'Save Changes',
               onPressed: () async {
                 Navigator.pop(ctx);
-                await context.read<AuthProvider>().updateProfile(
+                final ok = await context.read<AuthProvider>().updateProfile(
                       fullName: nameCtrl.text.trim(),
                       phone: phoneCtrl.text.trim(),
                     );
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Profile updated'),
-                        backgroundColor: AppTheme.success),
+                    SnackBar(
+                        content: Text(ok ? 'Profile updated' : 'Update failed'),
+                        backgroundColor: ok ? AppTheme.success : AppTheme.error),
                   );
                 }
               },
@@ -256,12 +256,24 @@ class ProfileScreen extends StatelessWidget {
                   );
                   return;
                 }
+                if (currentCtrl.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Enter current password')),
+                  );
+                  return;
+                }
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Password updated successfully'),
-                      backgroundColor: AppTheme.success),
-                );
+                final ok = await context.read<AuthProvider>().changePassword(
+                      currentPassword: currentCtrl.text,
+                      newPassword: newCtrl.text,
+                    );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(ok ? 'Password updated' : 'Incorrect current password'),
+                        backgroundColor: ok ? AppTheme.success : AppTheme.error),
+                  );
+                }
               },
             ),
           ],

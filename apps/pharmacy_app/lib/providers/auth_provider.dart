@@ -106,9 +106,9 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateProfile({required String fullName, required String phone}) async {
+  Future<bool> updateProfile({required String fullName, required String phone}) async {
     try {
-      final response = await ApiService.put('/patients/profile', {
+      final response = await ApiService.put('/pharmacy/profile', {
         'fullName': fullName,
         'phone': phone,
       });
@@ -120,8 +120,24 @@ class AuthProvider with ChangeNotifier {
           notifyListeners();
         }
       }
+      return response.success;
     } catch (e) {
-      // ignore
+      return false;
+    }
+  }
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await ApiService.put('/pharmacy/profile', {
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+      });
+      return response.success;
+    } catch (e) {
+      return false;
     }
   }
 }
