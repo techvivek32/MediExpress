@@ -19,11 +19,11 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
-      fullName: json['fullName'],
-      email: json['email'],
-      phone: json['phone'],
-      role: json['role'],
+      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      fullName: json['fullName'] ?? '',
+      email: json['email'] ?? '',
+      phone: json['phone'] ?? '',
+      role: json['role'] ?? 'patient',
       isVerified: json['isVerified'] ?? false,
       profileImage: json['profileImage'],
     );

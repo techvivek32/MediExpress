@@ -101,28 +101,16 @@ class AuthProvider with ChangeNotifier {
   }
 
   void updateUser(Map<String, dynamic> userData) {
-    // Handle the case where the API returns _id instead of id
-    final data = Map<String, dynamic>.from(userData);
-    if (data.containsKey('_id') && !data.containsKey('id')) {
-      data['id'] = data['_id'].toString();
-    }
-    _user = User.fromJson(data);
-
-    // Also update persistent storage
+    _user = User.fromJson(userData);
     AuthService.saveUser(_user!);
-
     notifyListeners();
   }
 
   Future<void> refreshProfile() async {
     try {
       final response = await ApiService.get('/patients/profile');
-      if (response.success && response.data['user'] != null) {
-        final data = Map<String, dynamic>.from(response.data['user']);
-        if (data.containsKey('_id') && !data.containsKey('id')) {
-          data['id'] = data['_id'].toString();
-        }
-        _user = User.fromJson(data);
+      if (response.success && response.data != null && response.data['user'] != null) {
+        _user = User.fromJson(response.data['user']);
         await AuthService.saveUser(_user!);
         notifyListeners();
       }

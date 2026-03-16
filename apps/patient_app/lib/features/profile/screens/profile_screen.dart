@@ -15,6 +15,15 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   @override
+  void initState() {
+    super.initState();
+    // Fetch fresh profile data from backend on open
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthProvider>().refreshProfile();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
 
@@ -88,8 +97,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfileHeader(BuildContext context, dynamic user) {
     ImageProvider? imageProvider;
     
-    if (user?.profileImage != null && user!.profileImage!.isNotEmpty) {
-      final profileImage = user.profileImage!;
+    final profileImage = user?.profileImage;
+    if (profileImage != null && profileImage.isNotEmpty) {
       if (profileImage.startsWith('data:image')) {
         final base64String = profileImage.split(',')[1];
         imageProvider = MemoryImage(base64Decode(base64String));
