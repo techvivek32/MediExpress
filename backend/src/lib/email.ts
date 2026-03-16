@@ -12,9 +12,9 @@ const transporter = nodemailer.createTransport({
 export async function sendOTPEmail(email: string, otp: string): Promise<boolean> {
   try {
     const mailOptions = {
-      from: `"MediExpress" <${process.env.GMAIL_USER}>`,
+      from: `"OrdoGo" <${process.env.GMAIL_USER}>`,
       to: email,
-      subject: 'Your MediExpress Verification Code',
+      subject: 'Your OrdoGo Verification Code',
       html: `
         <!DOCTYPE html>
         <html>
@@ -32,7 +32,7 @@ export async function sendOTPEmail(email: string, otp: string): Promise<boolean>
         <body>
           <div class="container">
             <div class="header">
-              <h1>🏥 MediExpress</h1>
+              <h1>🏥 OrdoGo</h1>
             </div>
             <div class="content">
               <h2>Email Verification</h2>
@@ -47,7 +47,7 @@ export async function sendOTPEmail(email: string, otp: string): Promise<boolean>
               <p>If you didn't request this code, please ignore this email.</p>
               
               <div class="footer">
-                <p>© 2024 MediExpress. All rights reserved.</p>
+                <p>© 2024 OrdoGo. All rights reserved.</p>
                 <p>This is an automated email, please do not reply.</p>
               </div>
             </div>

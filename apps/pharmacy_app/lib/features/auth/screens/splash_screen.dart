@@ -37,21 +37,17 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.local_pharmacy,
-              size: 80,
-              color: Colors.white,
-            ),
+            Image.asset('assets/images/logo.png', width: 120, height: 120),
             const SizedBox(height: AppTheme.spacing16),
             Text(
-              'MediExpress',
+              'OrdoGo',
               style: Theme.of(context).textTheme.displayLarge?.copyWith(
                     color: Colors.white,
                   ),
             ),
             const SizedBox(height: AppTheme.spacing8),
             Text(
-              'Pharmacy',
+              'Medicine delivery at doorstep.',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Colors.white70,
                   ),

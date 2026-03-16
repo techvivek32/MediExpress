@@ -107,7 +107,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: Icon(Icons.local_pharmacy, size: 64, color: AppTheme.primary),
+                child: Image.asset('assets/images/logo.png', width: 120, height: 80),
               ),
               const SizedBox(height: AppTheme.spacing8),
               Center(

@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import '../globals.css';
 
 export const metadata: Metadata = {
-  title: 'MediExpress Admin',
-  description: 'Admin Dashboard for MediExpress Platform',
+  title: 'OrdoGo Admin',
+  description: 'Admin Dashboard for OrdoGo Platform',
 };
 
 export default function AdminLayout({

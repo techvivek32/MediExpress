@@ -59,12 +59,10 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: AppTheme.spacing48),
-                Icon(
-                  Icons.local_pharmacy_rounded,
-                  size: 64,
-                  color: AppTheme.primary,
+                Center(
+                  child: Image.asset('assets/images/logo.png', width: 120, height: 80),
                 ),
-                const SizedBox(height: AppTheme.spacing24),
+                const SizedBox(height: AppTheme.spacing16),
                 Text(
                   'Welcome Back',
                   style: Theme.of(context).textTheme.displayMedium,

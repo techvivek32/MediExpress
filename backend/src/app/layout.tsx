@@ -1,8 +1,8 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'MediExpress API',
-  description: 'Backend API for Prescription Medicine Delivery Platform',
+  title: 'OrdoGo API',
+  description: 'Backend API for OrdoGo Medicine Delivery Platform',
 };
 
 export default function RootLayout({

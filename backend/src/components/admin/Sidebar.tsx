@@ -30,7 +30,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
       <div className="flex items-center justify-center h-16 border-b">
         <div className="flex items-center space-x-2">
           <span className="text-3xl">💊</span>
-          <span className="text-xl font-bold text-primary-600">MediExpress</span>
+          <span className="text-xl font-bold text-primary-600">OrdoGo</span>
         </div>
       </div>
 

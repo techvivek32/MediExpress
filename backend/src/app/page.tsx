@@ -35,7 +35,7 @@ export default function Home() {
           color: '#2E7D32',
           marginBottom: '8px'
         }}>
-          MediExpress
+          OrdoGo
         </h1>
         <p style={{ 
           fontSize: '14px', 

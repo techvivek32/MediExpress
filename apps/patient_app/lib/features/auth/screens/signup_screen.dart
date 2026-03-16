@@ -92,12 +92,10 @@ class _SignupScreenState extends State<SignupScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: AppTheme.spacing32),
-                Icon(
-                  Icons.local_pharmacy_rounded,
-                  size: 64,
-                  color: AppTheme.primary,
+                Center(
+                  child: Image.asset('assets/images/logo.png', width: 120, height: 80),
                 ),
-                const SizedBox(height: AppTheme.spacing24),
+                const SizedBox(height: AppTheme.spacing16),
                 Text(
                   'Create Account',
                   style: Theme.of(context).textTheme.displayMedium,

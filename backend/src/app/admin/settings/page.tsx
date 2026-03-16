@@ -20,7 +20,7 @@ export default function SettingsPage() {
     commissionRate: 15,
     minOrderAmount: 50,
     maxDeliveryRadius: 10,
-    supportEmail: 'support@mediexpress.com',
+    supportEmail: 'support@ordogo.com',
     supportPhone: '+212 600 000 000',
     maintenanceMode: false,
   });

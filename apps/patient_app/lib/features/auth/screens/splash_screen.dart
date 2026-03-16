@@ -48,15 +48,15 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: AppTheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.local_pharmacy_rounded,
-                size: 80,
-                color: AppTheme.primary,
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 80,
+                height: 80,
               ),
             ),
             const SizedBox(height: AppTheme.spacing32),
             Text(
-              'MediExpress',
+              'OrdoGo',
               style: Theme.of(context).textTheme.displayMedium?.copyWith(
                     color: AppTheme.primary,
                     fontWeight: FontWeight.bold,
@@ -64,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: AppTheme.spacing8),
             Text(
-              'Medicine Delivery at Your Doorstep',
+              'Medicine delivery at doorstep.',
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),

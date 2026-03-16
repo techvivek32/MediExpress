@@ -58,13 +58,9 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const SizedBox(height: AppTheme.spacing48),
                 Center(
-                  child: Icon(
-                    Icons.local_pharmacy,
-                    size: 80,
-                    color: AppTheme.primary,
-                  ),
+                  child: Image.asset('assets/images/logo.png', width: 120, height: 80),
                 ),
-                const SizedBox(height: AppTheme.spacing24),
+                const SizedBox(height: AppTheme.spacing16),
                 Text(
                   'Welcome Back',
                   style: Theme.of(context).textTheme.displaySmall,

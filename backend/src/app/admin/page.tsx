@@ -43,7 +43,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700">Admin User</p>
-                  <p className="text-xs text-gray-500">admin@mediexpress.com</p>
+                  <p className="text-xs text-gray-500">admin@ordogo.com</p>
                 </div>
               </div>
             </div>
