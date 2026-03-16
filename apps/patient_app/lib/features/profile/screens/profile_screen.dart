@@ -4,10 +4,16 @@ import 'dart:convert';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../providers/auth_provider.dart';
+import 'edit_profile_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
@@ -30,7 +36,16 @@ class ProfileScreen extends StatelessWidget {
               context,
               icon: Icons.person,
               title: 'Edit Profile',
-              onTap: () {},
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                );
+                // Refresh profile after returning from edit
+                if (mounted) {
+                  context.read<AuthProvider>().refreshProfile();
+                }
+              },
             ),
             _buildMenuItem(
               context,
@@ -73,14 +88,12 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildProfileHeader(BuildContext context, dynamic user) {
     ImageProvider? imageProvider;
     
-    if (user?.profileImage != null) {
-      final profileImage = user!.profileImage!;
+    if (user?.profileImage != null && user!.profileImage!.isNotEmpty) {
+      final profileImage = user.profileImage!;
       if (profileImage.startsWith('data:image')) {
-        // Base64 image
         final base64String = profileImage.split(',')[1];
         imageProvider = MemoryImage(base64Decode(base64String));
-      } else {
-        // URL image (not used in current implementation)
+      } else if (profileImage.startsWith('http')) {
         imageProvider = NetworkImage(profileImage);
       }
     }
