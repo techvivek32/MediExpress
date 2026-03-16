@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/api_service.dart';
 import '../models/user_model.dart';
 
 class AuthProvider with ChangeNotifier {
@@ -15,7 +16,6 @@ class AuthProvider with ChangeNotifier {
   Future<void> checkAuth() async {
     _isLoading = true;
     notifyListeners();
-
     try {
       final isLoggedIn = await AuthService.isLoggedIn();
       if (isLoggedIn) {
@@ -24,7 +24,6 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       _error = e.toString();
     }
-
     _isLoading = false;
     notifyListeners();
   }
@@ -33,10 +32,8 @@ class AuthProvider with ChangeNotifier {
     _isLoading = true;
     _error = null;
     notifyListeners();
-
     try {
       final result = await AuthService.login(email, password);
-      
       if (result.success) {
         _user = result.user;
         _isLoading = false;
@@ -50,6 +47,52 @@ class AuthProvider with ChangeNotifier {
       }
     } catch (e) {
       _error = 'Login failed: ${e.toString()}';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> register({
+    required String fullName,
+    required String email,
+    required String phone,
+    required String password,
+    required String pharmacyName,
+    required String licenseNumber,
+    required String address,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final response = await ApiService.post('/auth/register', {
+        'fullName': fullName,
+        'email': email,
+        'phone': phone,
+        'password': password,
+        'role': 'pharmacy',
+        'pharmacyName': pharmacyName,
+        'licenseNumber': licenseNumber,
+        'address': address,
+        'coordinates': [0.0, 0.0],
+      }, includeAuth: false);
+
+      if (response.success && response.data != null) {
+        await AuthService.saveToken(response.data['token']);
+        await AuthService.saveUserData(response.data['user']);
+        _user = User.fromJson(response.data['user']);
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _error = response.message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _error = 'Registration failed: ${e.toString()}';
       _isLoading = false;
       notifyListeners();
       return false;

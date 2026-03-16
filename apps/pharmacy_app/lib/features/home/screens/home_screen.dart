@@ -4,6 +4,9 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/prescription_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../orders/orders_screen.dart';
+import '../../profile/profile_screen.dart';
+import '../../requests/screens/prescription_requests_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,14 +16,50 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
+
+  final List<Widget> _screens = const [
+    _DashboardTab(),
+    PrescriptionRequestsScreen(),
+    OrdersScreen(),
+    ProfileScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(index: _currentIndex, children: _screens),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (i) => setState(() => _currentIndex = i),
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppTheme.primary,
+        unselectedItemColor: AppTheme.textSecondary,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Requests'),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Orders'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardTab extends StatefulWidget {
+  const _DashboardTab();
+
+  @override
+  State<_DashboardTab> createState() => _DashboardTabState();
+}
+
+class _DashboardTabState extends State<_DashboardTab> {
   @override
   void initState() {
     super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    await context.read<PrescriptionProvider>().fetchPrescriptionRequests();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<PrescriptionProvider>().fetchPrescriptionRequests();
+    });
   }
 
   @override
@@ -28,78 +67,93 @@ class _HomeScreenState extends State<HomeScreen> {
     final user = context.watch<AuthProvider>().user;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await context.read<AuthProvider>().logout();
-              if (mounted) {
-                Navigator.pushReplacementNamed(context, '/login');
-              }
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Dashboard')),
       body: RefreshIndicator(
-        onRefresh: _loadData,
+        onRefresh: () =>
+            context.read<PrescriptionProvider>().fetchPrescriptionRequests(),
         child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Hello, ${user?.fullName ?? 'Pharmacy'}',
-                style: Theme.of(context).textTheme.displaySmall,
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: AppTheme.spacing24),
-              _buildStatsCards(),
+              Consumer<PrescriptionProvider>(
+                builder: (context, provider, _) => Row(
+                  children: [
+                    Expanded(
+                      child: _StatCard(
+                        icon: Icons.pending_actions,
+                        title: 'Pending',
+                        value: '${provider.prescriptions.length}',
+                        color: AppTheme.warning,
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spacing12),
+                    const Expanded(
+                      child: _StatCard(
+                        icon: Icons.check_circle,
+                        title: 'Completed',
+                        value: '0',
+                        color: AppTheme.success,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: AppTheme.spacing24),
-              _buildQuickActions(),
+              Text('Quick Actions',
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: AppTheme.spacing16),
+              _ActionCard(
+                icon: Icons.receipt_long,
+                title: 'Prescription Requests',
+                subtitle: 'View and respond to requests',
+                onTap: () {
+                  // Switch to requests tab via parent
+                  final homeState = context
+                      .findAncestorStateOfType<_HomeScreenState>();
+                  homeState?.setState(() => homeState._currentIndex = 1);
+                },
+              ),
+              const SizedBox(height: AppTheme.spacing12),
+              _ActionCard(
+                icon: Icons.history,
+                title: 'Order History',
+                subtitle: 'View all completed orders',
+                onTap: () {
+                  final homeState = context
+                      .findAncestorStateOfType<_HomeScreenState>();
+                  homeState?.setState(() => homeState._currentIndex = 2);
+                },
+              ),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildStatsCards() {
-    return Consumer<PrescriptionProvider>(
-      builder: (context, provider, _) {
-        final pendingCount = provider.prescriptions.length;
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+  final Color color;
 
-        return Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                icon: Icons.pending_actions,
-                title: 'Pending',
-                value: '$pendingCount',
-                color: AppTheme.warning,
-              ),
-            ),
-            const SizedBox(width: AppTheme.spacing12),
-            Expanded(
-              child: _buildStatCard(
-                icon: Icons.check_circle,
-                title: 'Completed',
-                value: '0',
-                color: AppTheme.success,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  const _StatCard({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.color,
+  });
 
-  Widget _buildStatCard({
-    required IconData icon,
-    required String title,
-    required String value,
-    required Color color,
-  }) {
+  @override
+  Widget build(BuildContext context) {
     return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -107,47 +161,34 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(icon, color: color, size: 32),
             const SizedBox(height: AppTheme.spacing8),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    color: color,
-                  ),
-            ),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            Text(value,
+                style: Theme.of(context)
+                    .textTheme
+                    .displaySmall
+                    ?.copyWith(color: color)),
+            Text(title, style: Theme.of(context).textTheme.bodyMedium),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildQuickActions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quick Actions',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: AppTheme.spacing16),
-        _buildActionCard(
-          icon: Icons.receipt_long,
-          title: 'Prescription Requests',
-          subtitle: 'View and respond to requests',
-          onTap: () => Navigator.pushNamed(context, '/requests'),
-        ),
-      ],
-    );
-  }
+class _ActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
 
-  Widget _buildActionCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
+  const _ActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return AppCard(
       child: InkWell(
         onTap: onTap,
@@ -169,9 +210,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: Theme.of(context).textTheme.titleMedium),
+                    Text(title,
+                        style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: AppTheme.spacing4),
-                    Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+                    Text(subtitle,
+                        style: Theme.of(context).textTheme.bodySmall),
                   ],
                 ),
               ),

@@ -8,12 +8,17 @@ class PrescriptionDetailScreen extends StatelessWidget {
 
   const PrescriptionDetailScreen({super.key, required this.prescription});
 
+  String _get(String key) {
+    if (prescription is Map) return prescription[key]?.toString() ?? 'N/A';
+    try { return prescription[key]?.toString() ?? 'N/A'; } catch (_) { return 'N/A'; }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final imageUrl = _get('imageUrl');
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Prescription Details'),
-      ),
+      appBar: AppBar(title: const Text('Prescription Details')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
@@ -22,33 +27,36 @@ class PrescriptionDetailScreen extends StatelessWidget {
             AppCard(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                child: Image.network(
-                  prescription.imageUrl ?? '',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 300,
-                      color: AppTheme.background,
-                      child: const Center(
-                        child: Icon(Icons.image, size: 64, color: AppTheme.textHint),
-                      ),
-                    );
-                  },
+                child: imageUrl != 'N/A'
+                    ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _imagePlaceholder(),
+                      )
+                    : _imagePlaceholder(),
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing24),
+            AppCard(
+              child: Padding(
+                padding: const EdgeInsets.all(AppTheme.spacing16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Patient Information', style: Theme.of(context).textTheme.titleLarge),
+                    const SizedBox(height: AppTheme.spacing16),
+                    _buildInfoRow(Icons.person, 'Name', _get('patientName')),
+                    _buildInfoRow(Icons.phone, 'Phone', _get('patientPhone')),
+                    _buildInfoRow(Icons.location_on, 'Address', _get('deliveryAddress')),
+                    _buildInfoRow(Icons.straighten, 'Distance', '${_get('distance')} km'),
+                  ],
                 ),
               ),
             ),
             const SizedBox(height: AppTheme.spacing24),
-            _buildInfoCard(context),
-            const SizedBox(height: AppTheme.spacing24),
             PrimaryButton(
               text: 'Create Quote',
-              onPressed: () {
-                Navigator.pushNamed(
-                  context,
-                  '/quote-builder',
-                  arguments: prescription,
-                );
-              },
+              onPressed: () => Navigator.pushNamed(context, '/quote-builder', arguments: prescription),
             ),
           ],
         ),
@@ -56,25 +64,11 @@ class PrescriptionDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard(BuildContext context) {
-    return AppCard(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Patient Information',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AppTheme.spacing16),
-            _buildInfoRow(Icons.person, 'Name', prescription.patientName ?? 'N/A'),
-            _buildInfoRow(Icons.phone, 'Phone', prescription.patientPhone ?? 'N/A'),
-            _buildInfoRow(Icons.location_on, 'Address', prescription.deliveryAddress ?? 'N/A'),
-            _buildInfoRow(Icons.straighten, 'Distance', '${prescription.distance ?? 0} km'),
-          ],
-        ),
-      ),
+  Widget _imagePlaceholder() {
+    return Container(
+      height: 300,
+      color: const Color(0xFFF5F5F5),
+      child: const Center(child: Icon(Icons.image, size: 64, color: Color(0xFFBDBDBD))),
     );
   }
 

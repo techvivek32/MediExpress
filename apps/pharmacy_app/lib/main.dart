@@ -7,7 +7,6 @@ import 'providers/prescription_provider.dart';
 import 'features/auth/screens/splash_screen.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/home/screens/home_screen.dart';
-import 'features/requests/screens/prescription_requests_screen.dart';
 import 'features/requests/screens/prescription_detail_screen.dart';
 import 'features/requests/screens/quote_builder_screen.dart';
 
@@ -34,19 +33,16 @@ class MyApp extends StatelessWidget {
           '/': (context) => const SplashScreen(),
           '/login': (context) => const LoginScreen(),
           '/home': (context) => const HomeScreen(),
-          '/requests': (context) => const PrescriptionRequestsScreen(),
         },
         onGenerateRoute: (settings) {
           if (settings.name == '/prescription-detail') {
-            final prescription = settings.arguments;
             return MaterialPageRoute(
-              builder: (context) => PrescriptionDetailScreen(prescription: prescription),
+              builder: (_) => PrescriptionDetailScreen(prescription: settings.arguments),
             );
           }
           if (settings.name == '/quote-builder') {
-            final prescription = settings.arguments;
             return MaterialPageRoute(
-              builder: (context) => QuoteBuilderScreen(prescription: prescription),
+              builder: (_) => QuoteBuilderScreen(prescription: settings.arguments),
             );
           }
           return null;

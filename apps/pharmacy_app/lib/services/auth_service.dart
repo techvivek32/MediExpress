@@ -53,15 +53,19 @@ class AuthService {
     return null;
   }
 
-  static Future<void> _saveToken(String token) async {
+  static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConstants.tokenKey, token);
   }
 
-  static Future<void> _saveUser(Map<String, dynamic> userData) async {
+  static Future<void> saveUserData(Map<String, dynamic> userData) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConstants.userKey, json.encode(userData));
   }
+
+  static Future<void> _saveToken(String token) => saveToken(token);
+
+  static Future<void> _saveUser(Map<String, dynamic> userData) => saveUserData(userData);
 }
 
 class AuthResult {

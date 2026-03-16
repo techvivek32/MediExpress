@@ -59,7 +59,9 @@ class _QuoteBuilderScreenState extends State<QuoteBuilderScreen> {
     }
 
     final success = await context.read<PrescriptionProvider>().sendQuote(
-          prescriptionId: widget.prescription.id,
+          prescriptionId: (widget.prescription is Map
+              ? widget.prescription['id']
+              : widget.prescription.id).toString(),
           items: _items,
           deliveryFee: double.tryParse(_deliveryFeeController.text) ?? 10,
         );

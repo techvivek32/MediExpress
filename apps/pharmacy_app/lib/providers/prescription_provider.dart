@@ -19,7 +19,7 @@ class PrescriptionProvider with ChangeNotifier {
       final result = await PrescriptionService.getPrescriptionRequests();
       
       if (result.success) {
-        _prescriptions = result.data ?? [];
+        _prescriptions = (result.data['prescriptions'] as List?) ?? [];
       } else {
         _error = result.message;
       }

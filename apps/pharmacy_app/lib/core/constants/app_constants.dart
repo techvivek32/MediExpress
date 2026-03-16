@@ -1,7 +1,5 @@
 class AppConstants {
-  static const String baseUrl = 'http://localhost:3000/api';
-  static const String androidEmulatorUrl = 'http://10.0.2.2:3000/api';
-  static const String iosSimulatorUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'https://medi-express-vivekvora3226-2527s-projects.vercel.app/api';
   
   static const String tokenKey = 'auth_token';
   static const String userKey = 'user_data';

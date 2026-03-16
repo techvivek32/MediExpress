@@ -1,18 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_constants.dart';
 
 class ApiService {
-  static String get baseUrl {
-    if (Platform.isAndroid) {
-      return AppConstants.androidEmulatorUrl;
-    } else if (Platform.isIOS) {
-      return AppConstants.iosSimulatorUrl;
-    }
-    return AppConstants.baseUrl;
-  }
+  static String get baseUrl => AppConstants.baseUrl;
 
   static Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -85,11 +77,10 @@ class ApiService {
   }
 
   static String _getErrorMessage(dynamic error) {
-    if (error is SocketException) {
+    final msg = error.toString();
+    if (msg.contains('SocketException') || msg.contains('No internet')) {
       return 'No internet connection';
-    } else if (error is http.ClientException) {
-      return 'Connection failed';
-    } else if (error.toString().contains('TimeoutException')) {
+    } else if (msg.contains('TimeoutException')) {
       return 'Request timeout';
     }
     return 'An error occurred';

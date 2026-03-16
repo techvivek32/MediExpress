@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../providers/prescription_provider.dart';
 
 class PrescriptionRequestsScreen extends StatefulWidget {
   const PrescriptionRequestsScreen({super.key});
@@ -11,30 +13,11 @@ class PrescriptionRequestsScreen extends StatefulWidget {
 
 class _PrescriptionRequestsScreenState
     extends State<PrescriptionRequestsScreen> {
-  bool _isLoading = true;
-  List<Map<String, dynamic>> _requests = [];
-
   @override
   void initState() {
     super.initState();
-    _loadRequests();
-  }
-
-  Future<void> _loadRequests() async {
-    setState(() => _isLoading = true);
-    // TODO: Load from API
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() {
-      _isLoading = false;
-      _requests = [
-        {
-          'id': '1',
-          'patientName': 'John Doe',
-          'distance': 2.5,
-          'address': '123 Main St, Casablanca',
-          'createdAt': DateTime.now().subtract(const Duration(minutes: 5)),
-        },
-      ];
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<PrescriptionProvider>().fetchPrescriptionRequests();
     });
   }
 
@@ -43,24 +26,45 @@ class _PrescriptionRequestsScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Prescription Requests'),
+        automaticallyImplyLeading: false,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _requests.isEmpty
-              ? _buildEmptyState()
-              : RefreshIndicator(
-                  onRefresh: _loadRequests,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(AppTheme.spacing16),
-                    itemCount: _requests.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: AppTheme.spacing12),
-                    itemBuilder: (context, index) {
-                      final request = _requests[index];
-                      return _buildRequestCard(request);
-                    },
+      body: Consumer<PrescriptionProvider>(
+        builder: (context, provider, _) {
+          if (provider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (provider.error != null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(provider.error!, style: const TextStyle(color: AppTheme.error)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => provider.fetchPrescriptionRequests(),
+                    child: const Text('Retry'),
                   ),
-                ),
+                ],
+              ),
+            );
+          }
+          if (provider.prescriptions.isEmpty) {
+            return _buildEmptyState();
+          }
+          return RefreshIndicator(
+            onRefresh: () => provider.fetchPrescriptionRequests(),
+            child: ListView.separated(
+              padding: const EdgeInsets.all(AppTheme.spacing16),
+              itemCount: provider.prescriptions.length,
+              separatorBuilder: (_, __) => const SizedBox(height: AppTheme.spacing12),
+              itemBuilder: (context, index) {
+                final request = provider.prescriptions[index];
+                return _buildRequestCard(context, request);
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -69,33 +73,25 @@ class _PrescriptionRequestsScreenState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.inbox_outlined,
-            size: 80,
-            color: AppTheme.textSecondary.withOpacity(0.5),
-          ),
+          Icon(Icons.inbox_outlined, size: 80, color: AppTheme.textSecondary.withOpacity(0.5)),
           const SizedBox(height: AppTheme.spacing16),
-          Text(
-            'No Requests Yet',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('No Requests Yet', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppTheme.spacing8),
-          Text(
-            'New prescription requests will appear here',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text('New prescription requests will appear here',
+              style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );
   }
 
-  Widget _buildRequestCard(Map<String, dynamic> request) {
+  Widget _buildRequestCard(BuildContext context, dynamic request) {
+    final createdAt = request['createdAt'] != null
+        ? DateTime.tryParse(request['createdAt'].toString()) ?? DateTime.now()
+        : DateTime.now();
+
     return Card(
       child: InkWell(
-        onTap: () {
-          Navigator.pushNamed(context, '/prescription-viewer',
-              arguments: request);
-        },
+        onTap: () => Navigator.pushNamed(context, '/prescription-detail', arguments: request),
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -110,10 +106,7 @@ class _PrescriptionRequestsScreenState
                       color: AppTheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                     ),
-                    child: const Icon(
-                      Icons.person_outline,
-                      color: AppTheme.primary,
-                    ),
+                    child: const Icon(Icons.person_outline, color: AppTheme.primary),
                   ),
                   const SizedBox(width: AppTheme.spacing12),
                   Expanded(
@@ -121,22 +114,16 @@ class _PrescriptionRequestsScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          request['patientName'],
+                          request['patientName'] ?? 'Unknown',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: AppTheme.spacing4),
                         Row(
                           children: [
-                            const Icon(
-                              Icons.location_on_outlined,
-                              size: 14,
-                              color: AppTheme.textSecondary,
-                            ),
+                            const Icon(Icons.location_on_outlined, size: 14, color: AppTheme.textSecondary),
                             const SizedBox(width: AppTheme.spacing4),
-                            Text(
-                              '${request['distance']} km away',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
+                            Text('${request['distance'] ?? 0} km away',
+                                style: Theme.of(context).textTheme.bodySmall),
                           ],
                         ),
                       ],
@@ -144,29 +131,21 @@ class _PrescriptionRequestsScreenState
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacing12,
-                      vertical: AppTheme.spacing8,
-                    ),
+                        horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
                     decoration: BoxDecoration(
                       color: AppTheme.warning.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                     ),
                     child: Text(
-                      _getTimeAgo(request['createdAt']),
+                      _getTimeAgo(createdAt),
                       style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.warning,
-                      ),
+                          fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.warning),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: AppTheme.spacing12),
-              Text(
-                request['address'],
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              Text(request['deliveryAddress'] ?? '', style: Theme.of(context).textTheme.bodyMedium),
             ],
           ),
         ),
