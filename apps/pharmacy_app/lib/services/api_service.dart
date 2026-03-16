@@ -13,14 +13,10 @@ class ApiService {
 
   static Future<Map<String, String>> _getHeaders({bool includeAuth = true}) async {
     final headers = {'Content-Type': 'application/json'};
-
     if (includeAuth) {
       final token = await _getToken();
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
+      if (token != null) headers['Authorization'] = 'Bearer $token';
     }
-
     return headers;
   }
 
@@ -30,28 +26,33 @@ class ApiService {
       final response = await http
           .get(Uri.parse('$baseUrl$endpoint'), headers: headers)
           .timeout(AppConstants.connectionTimeout);
-
       return _handleResponse(response);
     } catch (e) {
       return ApiResponse(success: false, message: _getErrorMessage(e));
     }
   }
 
-  static Future<ApiResponse> post(
-    String endpoint,
-    Map<String, dynamic> data, {
-    bool includeAuth = true,
-  }) async {
+  static Future<ApiResponse> post(String endpoint, Map<String, dynamic> data,
+      {bool includeAuth = true}) async {
     try {
       final headers = await _getHeaders(includeAuth: includeAuth);
       final response = await http
-          .post(
-            Uri.parse('$baseUrl$endpoint'),
-            headers: headers,
-            body: json.encode(data),
-          )
+          .post(Uri.parse('$baseUrl$endpoint'),
+              headers: headers, body: json.encode(data))
           .timeout(AppConstants.connectionTimeout);
+      return _handleResponse(response);
+    } catch (e) {
+      return ApiResponse(success: false, message: _getErrorMessage(e));
+    }
+  }
 
+  static Future<ApiResponse> put(String endpoint, Map<String, dynamic> data) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http
+          .put(Uri.parse('$baseUrl$endpoint'),
+              headers: headers, body: json.encode(data))
+          .timeout(AppConstants.connectionTimeout);
       return _handleResponse(response);
     } catch (e) {
       return ApiResponse(success: false, message: _getErrorMessage(e));
@@ -59,20 +60,30 @@ class ApiService {
   }
 
   static ApiResponse _handleResponse(http.Response response) {
-    final body = json.decode(response.body);
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return ApiResponse(
-        success: body['success'] ?? true,
-        message: body['message'] ?? 'Success',
-        data: body['data'],
-      );
-    } else {
-      return ApiResponse(
-        success: false,
-        message: body['message'] ?? 'An error occurred',
-        errors: body['errors'],
-      );
+    try {
+      if (response.body.isEmpty) {
+        return ApiResponse(
+            success: response.statusCode < 300, message: 'No response');
+      }
+      if (response.body.contains('<html') || response.body.contains('<!DOCTYPE')) {
+        return ApiResponse(
+            success: false, message: 'Server error (${response.statusCode})');
+      }
+      final body = json.decode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return ApiResponse(
+          success: body['success'] ?? true,
+          message: body['message'] ?? 'Success',
+          data: body['data'],
+        );
+      } else {
+        return ApiResponse(
+          success: false,
+          message: body['message'] ?? 'Error ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Parse error: $e');
     }
   }
 
@@ -83,7 +94,7 @@ class ApiService {
     } else if (msg.contains('TimeoutException')) {
       return 'Request timeout';
     }
-    return 'An error occurred';
+    return 'Connection error';
   }
 }
 
@@ -93,10 +104,5 @@ class ApiResponse {
   final dynamic data;
   final dynamic errors;
 
-  ApiResponse({
-    required this.success,
-    required this.message,
-    this.data,
-    this.errors,
-  });
+  ApiResponse({required this.success, required this.message, this.data, this.errors});
 }

@@ -4,6 +4,8 @@ import User from '@/models/User';
 import { verifyPassword, generateToken } from '@/lib/auth';
 import { successResponse, errorResponse } from '@/lib/response';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();

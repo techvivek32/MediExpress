@@ -105,4 +105,23 @@ class AuthProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  Future<void> updateProfile({required String fullName, required String phone}) async {
+    try {
+      final response = await ApiService.put('/patients/profile', {
+        'fullName': fullName,
+        'phone': phone,
+      });
+      if (response.success && response.data != null) {
+        final userData = response.data['user'];
+        if (userData != null) {
+          await AuthService.saveUserData(userData);
+          _user = User.fromJson(userData);
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
 }

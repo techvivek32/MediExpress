@@ -7,6 +7,8 @@ import Rider from '@/models/Rider';
 import { hashPassword, generateToken } from '@/lib/auth';
 import { successResponse, errorResponse } from '@/lib/response';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
